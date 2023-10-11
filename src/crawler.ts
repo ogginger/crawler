@@ -9,6 +9,7 @@ interface CrawlerInput {
     pagePredicate: ( page: puppeteer.Page ) => Promise<{ found: boolean, target: any }>;
     linkList: string[];
     linkPredicate: ( link: string, blacklist: any ) => boolean;
+    linkBlacklist?: any;
 }
 
 export default class Crawler {
@@ -32,8 +33,7 @@ export default class Crawler {
         let [ page ] = await browser.pages();
         return { browser, page };
     }
-    public async crawl( page: puppeteer.Page,  pagePredicate: ( page: puppeteer.Page ) => Promise<{ found: boolean, target: any }> , linkList: string[], linkPredicate: ( link: string, blacklist: any ) => boolean ) {
-        let linkBlacklist: any = {};
+    public async crawl( page: puppeteer.Page,  pagePredicate: ( page: puppeteer.Page ) => Promise<{ found: boolean, target?: any }> , linkList: string[], linkPredicate: ( link: string, blacklist: any ) => Promise<boolean> | boolean, linkBlacklist: any = {} ) {
         while ( linkList.length != 0 ) {
             let link: string;
             for ( let index = 0; index <= linkList.length; index++ ) {
@@ -56,8 +56,15 @@ export default class Crawler {
                     links = links.map(( anchor ) => { return anchor.href });
                     return links;
                 });
-                pageLinks = pageLinks.filter(( link ) => linkPredicate( link, linkBlacklist ));
-                linkList = linkList.concat( pageLinks );
+                let filteredLinks: string[] = [];
+                for ( let index = 0; index < pageLinks.length; index++ ) {
+                    try {
+                        if ( await linkPredicate( pageLinks[index], linkBlacklist ) ) filteredLinks.push( pageLinks[index] );                           
+                    } catch ( error ) {
+                        console.log( error.message );
+                    }
+                }
+                linkList = linkList.concat( filteredLinks );
             }
         }
         throw new Error("Unable to find the target.");
