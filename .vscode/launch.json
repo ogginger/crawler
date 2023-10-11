@@ -1,0 +1,17 @@
+{
+    "version": "0.2.0",
+    "configurations": [{
+        "name": "Launch Program",
+        "program": "${workspaceFolder}/src/main.ts",
+        "outFiles": [
+            "${workspaceFolder}/**/*.js",
+            "!**/node_modules/**"
+        ],
+        "request": "launch",
+        "skipFiles": [
+            "<node_internals>/**"
+        ],
+        "type": "node"
+    }],
+    "compounds": []
+}

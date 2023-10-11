@@ -1,0 +1,17 @@
+{
+  "name": "crawler",
+  "version": "1.0.0",
+  "description": "Empty typescript project for quick-starting development.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@ogginger/testsuite": "^1.0.4"
+  },
+  "dependencies": {
+    "puppeteer": "^21.3.8"
+  }
+}

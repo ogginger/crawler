@@ -1,0 +1,38 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Build - Crawler",
+            "command": "tsc",
+            "type": "shell",
+            "args": [
+                "-p",
+                "."
+            ],
+            "problemMatcher": [
+                "$tsc"
+            ],
+            "presentation": {
+                "reveal": "always"
+            },
+            "group": "build"
+        },
+        {
+            "label": "Watch - Crawler",
+            "command": "tsc",
+            "type": "shell",
+            "args": [
+                "--watch",
+                "-p",
+                "."
+            ],
+            "problemMatcher": [
+                "$tsc"
+            ],
+            "presentation": {
+                "reveal": "always"
+            },
+            "group": "build"
+        }
+    ]
+}
