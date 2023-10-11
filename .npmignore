@@ -2,3 +2,4 @@
 src/main.ts
 builds/main.*
 .gitignore
+node_modules/

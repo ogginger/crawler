@@ -1,7 +1,7 @@
 {
-  "name": "crawler",
-  "version": "1.0.0",
-  "description": "Empty typescript project for quick-starting development.",
+  "name": "@ogginger/crawler",
+  "version": "1.0.1",
+  "description": "Nodejs package for web crawling.",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -13,5 +13,13 @@
   },
   "dependencies": {
     "puppeteer": "^21.3.8"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/ogginger/crawler.git"
+  },
+  "bugs": {
+    "url": "https://github.com/ogginger/crawler/issues"
+  },
+  "homepage": "https://github.com/ogginger/crawler#readme"
 }
