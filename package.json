@@ -2,7 +2,7 @@
   "name": "@ogginger/crawler",
   "version": "1.0.4",
   "description": "Nodejs package for web crawling.",
-  "main": "builds/main.js",
+  "main": "builds/crawler.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
