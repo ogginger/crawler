@@ -1,6 +1,6 @@
 {
   "name": "@ogginger/crawler",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Nodejs package for web crawling.",
   "main": "index.js",
   "scripts": {
@@ -11,6 +11,7 @@
   "devDependencies": {
     "@ogginger/testsuite": "^1.0.4"
   },
+  "types": "builds/crawler.d.ts",
   "dependencies": {
     "puppeteer": "^21.3.8"
   },
