@@ -1,6 +1,6 @@
 {
   "name": "@ogginger/crawler",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Nodejs package for web crawling.",
   "main": "index.js",
   "scripts": {
