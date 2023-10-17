@@ -73,6 +73,7 @@ export default class Crawler {
                     }
                 }
                 linkList = linkList.concat( filteredLinks );
+                linkList = Array.from(new Set( linkList ));
             }
         }
         if ( exhaustive ) {
