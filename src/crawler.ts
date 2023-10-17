@@ -63,6 +63,7 @@ export default class Crawler {
                     links = links.map(( anchor ) => { return anchor.href });
                     return links;
                 });
+                pageLinks = Array.from(new Set( pageLinks ));
                 let filteredLinks: string[] = [];
                 for ( let index = 0; index < pageLinks.length; index++ ) {
                     try {
