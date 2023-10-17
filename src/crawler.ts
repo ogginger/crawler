@@ -54,11 +54,10 @@ export default class Crawler {
                 }
             }
             let result = await pagePredicate( page );
-            if ( result.found && !exhaustive ) {
+            if ( result.found && exhaustive == false ) {
                 return result.target;
-            } else if ( result.found ) {
-                results.push( result.target );
             } else {
+                if ( result.found ) results.push( result.target );
                 let pageLinks = await page.evaluate(() => {
                     let links: any[] = Array.from(document.getElementsByTagName("a"));
                     links = links.map(( anchor ) => { return anchor.href });
