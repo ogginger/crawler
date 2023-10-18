@@ -1,4 +1,5 @@
 import * as puppeteer from "puppeteer";
+import _ from "lodash";
 
 interface CrawlerOptions {
     viewport?: { width: number, height: number }
@@ -11,6 +12,7 @@ interface CrawlerInput {
     linkPredicate: ( link: string, blacklist: any ) => boolean;
     linkBlacklist?: any;
     exhaustive?: boolean;
+    filterLinkList?: ( linkList: string[], linkBlacklist: any ) => Promise<string[]>;
 }
 
 export default class Crawler {
@@ -34,31 +36,35 @@ export default class Crawler {
         let [ page ] = await browser.pages();
         return { browser, page };
     }
-    public async crawl( page: puppeteer.Page,  pagePredicate: ( page: puppeteer.Page ) => Promise<{ found: boolean, target?: any }> , linkList: string[], linkPredicate: ( link: string, blacklist: any ) => Promise<boolean> | boolean, linkBlacklist: any = {}, exhaustive: boolean = false ) {
+    public async crawl( input: CrawlerInput ): Promise<any> {
+        input = _.merge({
+            linkBlacklist: {},
+            exhaustive: false
+        }, input);
         let results: any[] = [];
-        while ( linkList.length != 0 ) {
+        while ( input.linkList.length != 0 ) {
             let link: string;
-            for ( let index = 0; index <= linkList.length; index++ ) {
+            for ( let index = 0; index <= input.linkList.length; index++ ) {
                 try {
-                    link = linkList.shift();
-                    await page.goto( link );
-                    linkBlacklist[link] = true;
+                    link = input.linkList.shift();
+                    await input.page.goto( link );
+                    input.linkBlacklist[link] = true;
                     break;
                 } catch ( error ) {
                     console.log( error.message );
-                    if ( linkList.length == 0 && !exhaustive ) {
+                    if ( input.linkList.length == 0 && input.exhaustive == false ) {
                         throw new Error("Unable to find the target.");
-                    } else if ( linkList.length == 0 ) {
+                    } else if ( input.linkList.length == 0 ) {
                         return results;
                     }
                 }
             }
-            let result = await pagePredicate( page );
-            if ( result.found && exhaustive == false ) {
+            let result = await input.pagePredicate( input.page );
+            if ( result.found && input.exhaustive == false ) {
                 return result.target;
             } else {
                 if ( result.found ) results.push( result.target );
-                let pageLinks = await page.evaluate(() => {
+                let pageLinks = await input.page.evaluate(() => {
                     let links: any[] = Array.from(document.getElementsByTagName("a"));
                     links = links.map(( anchor ) => { return anchor.href });
                     return links;
@@ -67,16 +73,19 @@ export default class Crawler {
                 let filteredLinks: string[] = [];
                 for ( let index = 0; index < pageLinks.length; index++ ) {
                     try {
-                        if ( await linkPredicate( pageLinks[index], linkBlacklist ) ) filteredLinks.push( pageLinks[index] );                           
+                        if ( await input.linkPredicate( pageLinks[index], input.linkBlacklist ) ) filteredLinks.push( pageLinks[index] );                           
                     } catch ( error ) {
                         console.log( error.message );
                     }
                 }
-                linkList = linkList.concat( filteredLinks );
-                linkList = Array.from(new Set( linkList ));
+                input.linkList = input.linkList.concat( filteredLinks );
+                input.linkList = Array.from(new Set( input.linkList ));
+                if ( input.filterLinkList != undefined ) {
+                    input.linkList = await input.filterLinkList( input.linkList, input.linkBlacklist );
+                }
             }
         }
-        if ( exhaustive ) {
+        if ( input.exhaustive ) {
             return results;
         } else {
             throw new Error("Unable to find the target.");
@@ -154,7 +163,8 @@ export const tests: any[] = [
                 let { browser, page } = await crawler.open( crawler.browserOptions );
                 crawler.browser = browser;
                 crawler.page = page;
-                await crawler.crawl( page, input.pagePredicate.bind( this ), input.linkList, input.linkPredicate );
+                input.page = page;
+                await crawler.crawl( input );
                 result = true;
             } catch ( error ) {
                 console.log( error.message );
@@ -203,10 +213,71 @@ export const tests: any[] = [
         function: async function( input: CrawlerInput ) {
             let crawler: Crawler = this;
             let { browser, page } = await crawler.open( crawler.browserOptions );
-            let results = await crawler.crawl( page, input.pagePredicate.bind( crawler ), input.linkList, input.linkPredicate, {}, input.exhaustive );
+
+            input.page = page;
+            let results = await crawler.crawl( input );
             return results;
         },
         output: [true,true],
         debug: true,
+        run: false
+    }, {
+        name: "Crawler.crawl filterLinkList",
+        context: function() {
+            let context: any = new class mock extends Crawler {
+                public async open( browserOptions: puppeteer.PuppeteerLaunchOptions ): Promise<{ browser: puppeteer.Browser, page: puppeteer.Page }> {
+                    let browser: puppeteer.Browser = undefined;
+                    let page: any = {
+                        goto: async function( url: string ) {},
+                        evaluate: async function( callback: () => any ): Promise<any[]> {
+                            return [];
+                        },
+                    };
+                    return { browser, page };
+                }
+            }();
+            return context;
+        },
+        input: [{
+            page: undefined,
+            pagePredicate: async function( page: puppeteer.Page ): Promise<any> {
+                return { found: true, target: true };
+            },
+            linkList: ["https://some.place.com/1", "https://some.place.com/1/1", "https://some.place.com/1/2" ],
+            linkPredicate: function( link: string, blacklist: any ) {
+                return true;
+            },
+            exhaustive: true,
+            filterLinkList: async function( linkList: string[], linkBlacklist: any ): Promise<string[]> {
+                //Filter the link list so that only a single path per parent is included.
+                let filtered = linkList.reduce(( final: any, link: string ) => {
+                    let linkUrl = new URL( link );
+                    let parentPath = linkUrl.pathname.split("/").slice(0, -1).join("/");
+                    linkUrl.pathname = parentPath;
+                    let parentUrl = linkUrl.toString();
+                    if ( 
+                        final[parentPath] == undefined &&
+                        linkBlacklist[parentUrl] == undefined
+                    ) {
+                        final[parentPath] = true;
+                        final.filtered.push( link );
+                    } 
+                    return final;
+                }, {
+                    lookup: {},
+                    filtered: []
+                }).filtered;
+                return filtered;
+            }
+        }],
+        function: async function( input: CrawlerInput ) {
+            let crawler: Crawler = this;
+            let { browser, page } = await crawler.open( crawler.browserOptions );
+            input.page = page;
+            let results = await crawler.crawl( input );
+            return results;
+        },
+        output: [true],
+        debug: true
     }
 ];
