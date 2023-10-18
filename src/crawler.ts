@@ -1,11 +1,11 @@
 import * as puppeteer from "puppeteer";
 import _ from "lodash";
 
-interface CrawlerOptions {
+export interface CrawlerOptions {
     viewport?: { width: number, height: number }
 }
 
-interface CrawlerInput {
+export interface CrawlerInput {
     page: puppeteer.Page;
     pagePredicate: ( page: puppeteer.Page ) => Promise<{ found: boolean, target: any }>;
     linkList: string[];
